@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.feilu.api.dao.system.mapper.SystemMemberWalletRecordMapper">
+
+    <select id="pageMemberWalletRecord" resultType="java.util.Map">
+        SELECT
+            a.amount,
+            a.optType,
+            a.orderId,
+            a.type,
+            a.STATUS,
+            a.gmtCreate,
+            b.currencyCode,
+            b.currencySymbol
+        FROM
+            tb_member_wallet_record a
+                JOIN
+            tb_dict_currency b ON a.currencyCode = b.currencyCode
+        WHERE
+            a.memberId = #{memberId}
+          AND a.siteCode = #{siteCode}
+          AND a.currencyCode = #{currencyCode}
+          AND a.accountType != 'bank_card'
+        ORDER BY
+            a.gmtCreate DESC
+            LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countMemberWalletRecord" resultType="java.lang.Integer">
+        SELECT
+            count(*)
+        FROM
+            tb_member_wallet_record a
+                JOIN
+            tb_dict_currency b ON a.currencyCode = b.currencyCode
+        WHERE
+            a.memberId = #{memberId}
+          AND a.siteCode = #{siteCode}
+          AND a.currencyCode = #{currencyCode}
+          AND a.accountType != 'bank_card'
+    </select>
+</mapper>

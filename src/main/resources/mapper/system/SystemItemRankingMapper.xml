@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.feilu.api.dao.system.mapper.SystemItemRankingMapper">
+
+    <select id="selectRankedItems" resultType="java.lang.Integer">
+            SELECT itemId FROM (
+            SELECT itemId,
+            viewCount * 0.1 + addToCartCount * 0.3 + orderCount * 0.6 AS score
+            FROM tb_item_ranking
+            WHERE siteCode = #{siteCode}
+            <if test="itemId != null"> AND itemId != #{itemId} </if>
+            <if test="ageGroupFlag != null and ageGroupFlag != '' and siteCode.endsWith('K')">
+                AND ageGroupFlag = #{ageGroupFlag}
+            </if>
+            <if test="sexFlag != null"> AND sexFlag = #{sexFlag} </if>
+            <if test="categoryIds != null and categoryIds != ''"> AND categoryIds = #{categoryIds} </if>
+            ORDER BY score DESC
+            LIMIT 500
+            ) AS ranked_items
+            ORDER BY RAND()
+            LIMIT #{limit}, #{offset}
+    </select>
+</mapper>

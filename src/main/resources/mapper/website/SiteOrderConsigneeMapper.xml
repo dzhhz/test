@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.feilu.api.dao.website.mapper.SiteOrderConsigneeMapper">
+
+    <select id="selectDefaultCurrency" resultType="java.lang.String">
+        SELECT
+            b.defaultCurrency
+        FROM
+            site_order_consignee a,
+            site_area_country b
+        WHERE
+            a.country = b.country
+          AND orderId = #{orderId}
+    </select>
+</mapper>

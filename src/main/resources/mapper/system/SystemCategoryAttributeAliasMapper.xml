@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.feilu.api.dao.system.mapper.SystemCategoryAttributeAliasMapper">
+
+    <select id="selectDistinctAttributes" resultType="map">
+        SELECT DISTINCT b.attrId as attrKey, b.attrNameAlias
+        FROM tb_category_attribute a
+        JOIN tb_category_attribute_alias b ON a.id = b.attrId
+        WHERE a.isSearchAttr = 1
+        AND b.languageCode = #{languageCode}
+        AND b.categoryId IN
+        <foreach item="id" collection="categoryIds" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
+
+</mapper>

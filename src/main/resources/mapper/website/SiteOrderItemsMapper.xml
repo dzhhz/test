@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.feilu.api.dao.website.mapper.SiteOrderItemsMapper">
+
+    <select id="selectNotSyncByOrderId" resultType="java.util.Map">
+        SELECT
+            a.id,
+            a.itemId,
+            a.itemSkuId,
+            c.sellItemId sid,
+            c.productId,
+            c.title itemName,
+            a.skuAttrNames skuName,
+            a.buyNum,
+            a.subTotalPayPrice,
+            a.salePrice,
+            a.currencyCode,
+            b.salePrice skuSalePrice,
+            b.image
+        FROM
+            site_order_items a,
+            site_item_sku b,
+            site_item c
+        WHERE
+            a.itemSkuId = b.id
+          AND b.itemId = c.id
+          AND a.orderId = #{orderId}
+        ORDER BY
+            a.id
+    </select>
+
+
+    <select id="selectItemsByOrderId" resultType="java.util.Map">
+        SELECT
+            a.id,
+            a.itemId,
+            a.itemSkuId,
+            a.salePrice,
+            b.usdPrice,
+            c.sellItemId sid,
+            c.title itemName,
+            a.skuAttrNames skuName,
+            a.buyNum,
+            a.subTotalPayPrice,
+            a.currencyCode,
+            b.image,
+            b.salePrice skuSalePrice
+        FROM
+            site_order_items a,
+            site_item_sku b,
+            site_item c
+        WHERE
+            a.itemSkuId = b.id
+          AND b.itemId = c.id
+          AND a.orderId = #{orderId}
+        ORDER BY
+            a.id"
+    </select>
+</mapper>

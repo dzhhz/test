@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.feilu.api.dao.system.mapper.SystemItemMapper">
+
+    <select id="queryNewItem" resultType="java.lang.Integer">
+        SELECT
+            id
+        FROM
+            ( SELECT id FROM tb_item WHERE siteCode = #{siteCode} AND STATUS = 9 ORDER BY gmtCreate DESC, id LIMIT 100 ) AS ranking
+        ORDER BY
+            RAND()
+            LIMIT #{limit},#{offset}
+    </select>
+</mapper>

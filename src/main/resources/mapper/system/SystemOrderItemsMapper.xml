@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.feilu.api.dao.system.mapper.SystemOrderItemsMapper">
+
+    <select id="selectIsSyncByOrderId" resultType="java.util.Map">
+        SELECT
+            a.id,
+            a.itemId,
+            a.itemSkuId,
+            c.sellItemId sid,
+            c.productId,
+            d.title itemName,
+            a.skuAttrNames skuName,
+            a.skuAttrValues attrValuePath,
+            a.buyNum,
+            a.subTotalPayPrice,
+            a.currencyCode,
+            a.salePrice,
+            a.salePrice skuSalePrice
+        FROM
+            tb_order_items a,
+            tb_item c,
+            tb_product_alias d
+        WHERE
+            a.itemId = c.id
+          AND c.productId = d.productId
+          AND a.deleteFlag = 0
+          AND a.orderId = #{orderId}
+          AND d.languageCode = #{languageCode}
+        ORDER BY
+            a.id
+    </select>
+
+    <select id="selectWithOrderIdAndItemId" resultType="java.util.Map">
+        SELECT
+            a.buyNum,
+            a.skuAttrNames,
+            b.title
+        FROM
+            tb_order_items a
+                LEFT JOIN tb_product_alias b ON a.productId = b.productId
+        WHERE
+            a.orderId = #{orderId}
+          AND a.itemId = #{itemId}
+          AND b.languageCode = #{languageCode}
+        ORDER BY
+            a.id
+    </select>
+</mapper>

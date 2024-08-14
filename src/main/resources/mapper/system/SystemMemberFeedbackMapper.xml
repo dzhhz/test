@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.feilu.api.dao.system.mapper.SystemMemberFeedbackMapper">
+
+    <select id="page" resultType="java.util.Map">
+        SELECT content, reply, gmtCreate
+        FROM tb_member_feedback
+        WHERE memberId = #{memberId} AND siteCode = #{siteCode}
+        ORDER BY gmtCreate DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+</mapper>

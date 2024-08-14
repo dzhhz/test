@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.feilu.api.dao.system.mapper.SystemOrderAftersaleMapper">
+
+    <select id="pageOrderAfterSale" resultType="java.util.Map">
+        SELECT
+        a.id,
+        a.siteCode,
+        a.orderId,
+        a.memberId,
+        a.itemId,
+        a.itemSkuId,
+        a.processType,
+        a.applyNum,
+        a.applyAmount,
+        a.applyDes,
+        a.processDes,
+        a.expressNo,
+        a.expressName,
+        a.expressStatus,
+        a.STATUS,
+        a.gmtCreate,
+        a.gmtUpdate,
+        a.refundAmount totalPayPrice,
+        a.currencyCode,
+        c.payStatus,
+        CONCAT(a.siteCode, a.id) orderNo
+        FROM
+        tb_order_aftersale a
+        LEFT JOIN tb_order c ON a.orderId = c.id
+        <choose>
+            <when test="mobile != null and mobile != ''">
+                LEFT JOIN tb_order_consignee e ON a.orderId = e.orderId
+            </when>
+        </choose>
+        WHERE
+        a.processType != 4
+        AND a.siteCode = #{siteCode}
+        <choose>
+            <when test="mobile != null and mobile != ''">
+                AND (e.mobile =#{mobile} OR a.memberId = #{memberId})
+            </when>
+            <otherwise>
+                AND a.memberId = #{memberId}
+            </otherwise>
+        </choose>
+        ORDER BY a.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countOrderAfterSale" resultType="java.lang.Integer">
+        SELECT
+        count(*)
+        FROM
+        tb_order_aftersale a
+        LEFT JOIN tb_order c ON a.orderId = c.id
+        <choose>
+            <when test="mobile != null and mobile != ''">
+                LEFT JOIN tb_order_consignee e ON a.orderId = e.orderId
+            </when>
+        </choose>
+        WHERE
+        a.processType != 4
+        AND a.siteCode = #{siteCode}
+        <choose>
+            <when test="mobile != null and mobile != ''">
+                AND (e.mobile =#{mobile} OR a.memberId = #{memberId})
+            </when>
+            <otherwise>
+                AND a.memberId = #{memberId}
+            </otherwise>
+        </choose>
+    </select>
+
+
+    <select id="selectAfterSaleItems" resultType="java.util.Map">
+        SELECT
+            a.id,
+            a.itemId,
+            a.itemSkuId,
+            c.sellItemId sid,
+            c.productId,
+            d.title itemName,
+            b.attrNamePath skuName,
+            b.attrValuePath,
+            a.applyNum buyNum,
+            a.refundAmount subTotalPayPrice,
+            a.currencyCode,
+            c.salePrice,
+            b.salePrice skuSalePrice
+        FROM
+            tb_order_aftersale a,
+            tb_item_sku b,
+            tb_item c,
+            tb_product_alias d
+        WHERE
+            a.itemSkuId = b.id
+          AND a.itemId = c.id
+          AND c.productId = d.productId
+          AND a.id = #{id}
+          AND a.orderId = #{orderId}
+          AND a.itemId = #{itemId}
+          AND a.itemSkuId = #{itemSkuId}
+          AND d.languageCode = #{languageCode}
+        ORDER BY
+            a.id
+    </select>
+
+    <select id="selectAfterSaleInfo" resultType="java.util.Map">
+        SELECT
+            a.id,
+            b.siteCode,
+            CONCAT( b.siteCode, a.id ) orderNo,
+            b.currencyCode,
+            a.orderId,
+            a.itemId,
+            b.processType,
+            b.applyNum,
+            b.applyAmount,
+            b.imgProof,
+            b.applyDes,
+            b.applyReason,
+            b.reasonCode,
+            b.processDes,
+            b.isReceive,
+            b.expressNo,
+            b.expressName,
+            b.expressStatus,
+            b.newOrderNo,
+            b.STATUS,
+            b.gmtCreate,
+            b.gmtUpdate
+        FROM
+            tb_order_aftersale a,
+            tb_order_aftersale_main b
+        WHERE
+            a.mainId = b.id
+          AND a.id = #{id}
+          AND a.orderId = #{orderId}
+          AND a.itemId = #{itemId}
+          AND a.itemSkuId = #{itemSkuId}
+          AND b.memberId = #{memberId}
+        LIMIT 1
+    </select>
+
+</mapper>

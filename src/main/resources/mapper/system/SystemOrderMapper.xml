@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.feilu.api.dao.system.mapper.SystemOrderMapper">
+
+
+
+    <select id="pageOrders" resultType="java.util.Map">
+        SELECT a.id, a.id AS orderId, a.orderNo, a.totalBuyNum, a.totalPayPrice, a.orderStatus,
+        a.reviewStatus, a.paymentType AS paymentId, a.payStatus, a.currencyCode,
+        a.mergeId, a.gmtCreate, b.sysSubOrderStatus
+        FROM tb_order a
+        JOIN tb_order_ext b ON a.id = b.orderId
+        <choose>
+            <when test="mobile == null or mobile.isEmpty()">
+                WHERE a.siteCode = #{siteCode}
+                AND a.memberId = #{memberId}
+                AND a.isMerge = 0
+                AND b.sysOrderStatus != 'SPLITED'
+            </when>
+            <otherwise>
+                JOIN tb_order_consignee c ON a.id = c.orderId
+                WHERE a.siteCode = #{siteCode}
+                AND (c.mobile = #{mobile} OR (a.memberId = #{memberId} AND a.platform = 3))
+                AND a.isMerge = 0
+                AND b.sysOrderStatus != 'SPLITED'
+            </otherwise>
+        </choose>
+        <if test="orderStatus != null and !orderStatus.equals('ALL')">
+            <choose>
+                <when test="orderStatus.equals('PROCESSING')">
+                    AND (a.orderStatus = 'PAID' OR a.orderStatus = 'STOCKING'
+                    OR a.orderStatus = 'OUTSTOCK' OR a.orderStatus = 'PICKING')
+                </when>
+                <when test="orderStatus.equals('SHIPPED')">
+                    AND (a.orderStatus = 'SHIPPED' OR a.orderStatus = 'EXPRESS'
+                    OR a.orderStatus = 'INTRANSIT' OR a.orderStatus = 'DELIVERYING'
+                    OR a.orderStatus = 'RECEIVING' OR a.orderStatus = 'ARRIVED')
+                </when>
+                <otherwise>
+                    AND a.orderStatus = #{orderStatus}
+                </otherwise>
+            </choose>
+        </if>
+        <if test="orderStatus == null or orderStatus.equals('ALL')">
+            AND a.status = 1
+        </if>
+        ORDER BY a.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countOrders" resultType="java.lang.Integer">
+        SELECT count(*)
+        FROM tb_order a
+        JOIN tb_order_ext b ON a.id = b.orderId
+        <choose>
+            <when test="mobile == null or mobile.isEmpty()">
+                WHERE a.siteCode = #{siteCode}
+                AND a.memberId = #{memberId}
+                AND a.isMerge = 0
+                AND b.sysOrderStatus != 'SPLITED'
+            </when>
+            <otherwise>
+                JOIN tb_order_consignee c ON a.id = c.orderId
+                WHERE a.siteCode = #{siteCode}
+                AND (c.mobile = #{mobile} OR (a.memberId = #{memberId} AND a.platform = 3))
+                AND a.isMerge = 0
+                AND b.sysOrderStatus != 'SPLITED'
+            </otherwise>
+        </choose>
+        <if test="orderStatus != null and !orderStatus.equals('ALL')">
+            <choose>
+                <when test="orderStatus.equals('PROCESSING')">
+                    AND (a.orderStatus = 'PAID' OR a.orderStatus = 'STOCKING'
+                    OR a.orderStatus = 'OUTSTOCK' OR a.orderStatus = 'PICKING')
+                </when>
+                <when test="orderStatus.equals('SHIPPED')">
+                    AND (a.orderStatus = 'SHIPPED' OR a.orderStatus = 'EXPRESS'
+                    OR a.orderStatus = 'INTRANSIT' OR a.orderStatus = 'DELIVERYING'
+                    OR a.orderStatus = 'RECEIVING' OR a.orderStatus = 'ARRIVED')
+                </when>
+                <otherwise>
+                    AND a.orderStatus = #{orderStatus}
+                </otherwise>
+            </choose>
+        </if>
+        <if test="orderStatus == null or orderStatus.equals('ALL')">
+            AND a.status = 1
+        </if>
+    </select>
+
+    <select id="selectOrderWithMobile" resultType="com.feilu.api.dao.system.entity.SystemOrder">
+        SELECT
+            a.id orderId,
+            a.orderNo,
+            a.totalBuyNum,
+            a.totalSalePrice,
+            a.totalShippingPrice,
+            a.totalPromoPrice,
+            a.totalCouponPrice,
+            a.totalTaxPrice,
+            a.reviewStatus,
+            a.totalPointPrice,
+            a.totalPayPrice,
+            a.totalWalletPrice,
+            a.orderStatus,
+            a.paymentType,
+            a.payStatus,
+            a.shippingType,
+            a.currencyCode,
+            a.mergeId,
+            a.gmtCreate
+        FROM
+            tb_order a,
+            tb_order_consignee b
+        WHERE
+            a.id = b.orderId
+          AND a.id = #{orderId}
+          AND (
+            b.mobile = #{mobile}
+                OR ( a.memberId = #{memberId} AND a.platform = 3 ))
+    </select>
+
+    <select id="selectOrderCount" resultType="java.util.Map">
+        SELECT
+            IFNULL(
+                    SUM(
+                            CASE
+                                WHEN a.orderStatus IN ('SUBMITED', 'STOCKING', 'PAID', 'OUTSTOCK', 'PICKING')
+                                    AND a.isMerge = 0
+                                    AND b.sysOrderStatus != 'SPLITED' THEN 1
+                                ELSE 0
+                                END
+                    ),
+                    0
+            ) AS processing,
+            IFNULL(
+                    SUM(
+                            CASE
+                                WHEN a.orderStatus IN ('SHIPPED', 'EXPRESS', 'INTRANSIT', 'PASSING', 'DELIVERYING', 'RECEIVING', 'ARRIVED') THEN 1
+                                ELSE 0
+                                END
+                    ),
+                    0
+            ) AS shipped
+        FROM
+            tb_order a
+                JOIN tb_order_ext b ON a.id = b.orderId
+        WHERE
+            a.memberId = #{memberId}
+          AND a.siteCode = #{siteCode};
+
+    </select>
+
+    <select id="selectProcessOrderIds" resultType="java.lang.String">
+        SELECT
+            id
+        FROM
+            tb_order
+        WHERE
+            platform = 3
+          AND siteCode = #{siteCode}
+          AND memberId = #{memberId}
+          AND isMerge = 0
+          AND originId = ''
+          AND orderStatus IN ('SUBMITED', 'STOCKING', 'PAID', 'OUTSTOCK', 'PICKING')
+
+        UNION
+
+        SELECT
+            a.id
+        FROM
+            tb_order a
+                JOIN
+            tb_order_consignee c ON a.id = c.orderId
+        WHERE
+            a.siteCode = #{siteCode}
+          AND c.mobile = #{mobile}
+          AND a.isMerge = 0
+          AND a.originId = ''
+          AND a.orderStatus IN ('SUBMITED', 'STOCKING', 'PAID', 'OUTSTOCK', 'PICKING')
+          AND a.id NOT IN (
+            SELECT
+                id
+            FROM
+                tb_order
+            WHERE
+                platform = 3
+              AND siteCode = #{siteCode}
+              AND memberId = #{memberId}
+              AND isMerge = 0
+              AND originId = ''
+              AND orderStatus IN ('SUBMITED', 'STOCKING', 'PAID', 'OUTSTOCK', 'PICKING')
+        );
+
+    </select>
+
+    <select id="selectShippedOrderIds" resultType="java.lang.String">
+        (
+            SELECT
+                id
+            FROM
+                tb_order
+            WHERE
+                platform = 3
+              AND siteCode = #{siteCode}
+              AND memberId = #{memberId}
+              AND orderStatus IN ('SHIPPED', 'EXPRESS', 'INTRANSIT', 'PASSING', 'DELIVERYING', 'RECEIVING', 'ARRIVED')
+        )
+        UNION
+        (
+            SELECT
+                a.id
+            FROM
+                tb_order a
+                    JOIN tb_order_consignee c ON a.id = c.orderId
+            WHERE
+                a.siteCode = #{siteCode}
+              AND c.mobile = #{mobile}
+              AND a.orderStatus IN ('SHIPPED', 'EXPRESS', 'INTRANSIT', 'PASSING', 'DELIVERYING', 'RECEIVING', 'ARRIVED')
+              AND a.id NOT IN (
+                SELECT
+                    id
+                FROM
+                    tb_order
+                WHERE
+                    platform = 3
+                  AND siteCode = #{siteCode}
+                  AND memberId = #{memberId}
+                  AND orderStatus IN ('SHIPPED', 'EXPRESS', 'INTRANSIT', 'PASSING', 'DELIVERYING', 'RECEIVING', 'ARRIVED')
+            )
+        )
+
+    </select>
+
+    <select id="selectOrderInfoById" resultType="java.util.Map">
+        SELECT
+            orderNo,
+            gmtCreate,
+            DATE_FORMAT( gmtCreate, '%m-%d' ) DAY,
+            DATE_FORMAT( gmtCreate, '%H:%i' ) HOUR,
+            paymentType,
+            payStatus
+        FROM
+            tb_order
+        WHERE
+            id = #{orderId}
+    </select>
+
+    <select id="selectOneMemberIdByPhone" resultType="java.lang.String">
+        SELECT
+            a.memberId
+        FROM
+            tb_order a,
+            tb_order_consignee b
+        WHERE
+            a.id = b.orderId
+          AND a.STATUS = 1
+          AND a.payStatus >= 0
+          AND a.siteCode = #{siteCode}
+          AND b.mobile = #{mobile}
+        ORDER BY
+            a.gmtCreate DESC
+            LIMIT 1
+    </select>
+
+    <select id="selectRecentOrderByPhone" resultType="java.lang.String">
+        SELECT
+            a.id
+        FROM
+            tb_order a,
+            tb_order_consignee b,
+            tb_order_ext c
+        WHERE
+            a.id = b.orderId
+          AND a.id = c.orderId
+          AND a.totalCouponPrice = 0
+          AND a.siteCode = #{siteCode}
+          AND b.mobile = #{mobile}
+          AND c.sysOrderStatus = #{orderStatus}
+          AND a.gmtCreate >= #{date}
+        ORDER BY
+            a.gmtCreate DESC
+            LIMIT 1
+    </select>
+
+</mapper>

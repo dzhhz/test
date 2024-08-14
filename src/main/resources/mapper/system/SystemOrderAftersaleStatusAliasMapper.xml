@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.feilu.api.dao.system.mapper.SystemOrderAftersaleStatusAliasMapper">
+
+    <select id="selectStatusName" resultType="java.lang.String">
+        SELECT
+            a.statusName
+        FROM
+            tb_order_aftersale_status_alias a
+                LEFT JOIN tb_order_aftersale_status b ON a.statusCode = b.statusCode
+        WHERE
+            b.statusType = #{statusType}
+          AND b.status = #{status}
+          AND a.languageCode = #{languageCode}
+    </select>
+
+    <select id="selectStatusInfo" resultType="java.util.Map">
+        SELECT
+        a.statusName,
+        b.STATUS
+        FROM
+        tb_order_aftersale_status_alias a
+        LEFT JOIN tb_order_aftersale_status b ON a.statusCode = b.statusCode
+        WHERE
+        b.statusType = #{statusType}
+        AND a.languageCode = #{languageCode}
+        <choose>
+            <when test="nowStatus == -1">
+                AND (b.STATUS = 0 OR b.STATUS = 10 OR b.STATUS = -1)
+            </when>
+            <otherwise>
+                AND b.orderIdx &lt; 100
+            </otherwise>
+        </choose>
+        ORDER BY
+        <choose>
+            <when test="nowStatus == -1">
+                 b.id
+            </when>
+            <otherwise>
+                 b.orderIdx
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectTitle" resultType="java.util.Map">
+        SELECT
+            a.handlerTitle,
+            a.remindTitle,
+            a.remindTitleDes
+        FROM
+            tb_order_aftersale_status_alias a
+                LEFT JOIN tb_order_aftersale_status b ON a.statusCode = b.statusCode
+        WHERE
+            b.status = #{status}
+          AND a.languageCode = #{languageCode}
+        LIMIT 1
+    </select>
+
+
+</mapper>

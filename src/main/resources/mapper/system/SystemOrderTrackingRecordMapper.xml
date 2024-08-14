@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.feilu.api.dao.system.mapper.SystemOrderTrackingRecordMapper">
+
+    <select id="selectOrderTrackingRecordList" resultType="java.util.Map">
+        SELECT
+            d.statusIcon,
+            any_value ( b.statusName ) statusName,
+            d.id,
+            DATE_FORMAT( any_value ( a.gmtCreate ), '%m-%d' ) DAY,
+            DATE_FORMAT( any_value ( a.gmtCreate ), '%H:%i' ) HOUR
+        FROM
+            tb_order_tracking_record a
+                LEFT JOIN tb_order_tracking_status c ON a.statusCode = c.statusCode
+                LEFT JOIN tb_order_tracking_status d ON c.parentId = d.id
+                LEFT JOIN tb_order_tracking_status_alias b ON d.statusCode = b.statusCode
+        WHERE
+            a.orderId = #{orderId}
+          AND b.languageCode = #{languageCode}
+        GROUP BY
+            d.id
+        ORDER BY
+            d.id desc
+    </select>
+
+    <select id="selectListWithParentId" resultType="java.util.Map">
+        SELECT
+            c.statusIcon,
+            b.statusName,
+            DATE_FORMAT( a.gmtCreate, '%m-%d' ) DAY,
+            DATE_FORMAT( a.gmtCreate, '%H:%i' ) HOUR
+        FROM
+            tb_order_tracking_record a
+                LEFT JOIN tb_order_tracking_status_alias b ON a.statusCode = b.statusCode
+                LEFT JOIN tb_order_tracking_status c ON a.statusCode = c.statusCode
+        WHERE
+            a.orderId = #{orderId}
+          AND b.languageCode = #{languageCode}
+          AND c.parentId = #{parentId}
+        ORDER BY
+            a.id DESC
+    </select>
+</mapper>
